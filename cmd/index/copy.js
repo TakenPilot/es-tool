@@ -4,6 +4,32 @@ const stream = require('stream'),
   common = require('../../lib/common'),
   urlParse = require('url');
 
+/**
+ *
+ * @param {elasticsearch.Client} fromInstance
+ * @param {string} fromIndexName
+ * @param {elasticsearch.Client} toInstance
+ * @param {string} toIndexName
+ */
+function op(fromInstance, fromIndexName, toInstance, toIndexName) {
+
+  const bulkStream = common.createBulkStream(toInstance, 100),
+    changeIndexStream = common.createTransformStream(function (obj, encoding, next) {
+
+      obj._index = toIndexName;
+      this.push(obj);
+
+      next();
+    });
+
+  common.streamIndex(fromInstance, fromIndexName, 100)
+    .pipe(changeIndexStream)
+    .pipe(bulkStream)
+}
+
+/**
+ * @param {yargs} yargs
+ */
 function cmd(yargs) {
   yargs
     .option('from', {
@@ -30,18 +56,11 @@ function cmd(yargs) {
     fromInstance = common.getInstance({
       host: from.protocol + '//' + from.host
     }),
-    bulkStream = common.createBulkStream(toInstance, 100),
-    changeIndexStream = common.createTransformStream(function (obj, encoding, next) {
+    fromIndexName = from.path.substr(1),
+    toIndexName = to.path.substr(1);
 
-      obj._index = to.path.substr(1);
-      this.push(obj);
-
-      next();
-    });
-
-  common.streamIndex(fromInstance, from.path.substr(1), 100)
-    .pipe(changeIndexStream)
-    .pipe(bulkStream)
+  op(fromInstance, fromIndexName, toInstance, toIndexName);
 }
 
-module.exports = cmd;
+module.exports.cmd = cmd;
+module.exports.op = op;

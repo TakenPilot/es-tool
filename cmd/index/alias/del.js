@@ -2,14 +2,22 @@
 
 const _ = require('lodash'),
   stream = require('stream'),
-  common = require('../../lib/common'),
+  common = require('../../../lib/common'),
   fs = require('fs'),
-  log = require('../../lib/log').withStandardPrefix(__dirname),
+  log = require('../../../lib/log').withStandardPrefix(__dirname),
   urlParse = require('url');
+
+function op(instance, aliasName) {
+  const options = _.pickBy({name: aliasName}, _.identity);
+
+  log('info', 'deleting alias', options);
+
+  instance.indices.deleteAlias(options)
+}
 
 function cmd(yargs) {
   yargs
-    .demand(3);
+    .demand(4);
 
   const argv = yargs.argv,
     target = urlParse.parse(argv._[2]),
@@ -18,12 +26,9 @@ function cmd(yargs) {
     }),
     insetPath = target.path.substr(1),
     splitPath = insetPath.split('/'),
-    indexName = splitPath[0],
-    options = _.pickBy({index: indexName}, _.identity);
+    aliasName = splitPath[0];
 
-  log('info', 'creating', options);
-
-  instance.indices.create(options).then(function (result) {
+  op(instance, aliasName).then(function (result) {
     log('info', result);
   }).catch(function (error) {
     log('error', error);
@@ -31,3 +36,4 @@ function cmd(yargs) {
 }
 
 module.exports.cmd = cmd;
+module.exports.op = op;

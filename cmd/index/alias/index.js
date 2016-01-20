@@ -4,13 +4,13 @@ const common = require('../../../lib/common');
 
 function cmd(yargs) {
   yargs
-    .command('get', 'get mappings', require('./get').cmd)
-    .command('put', 'put mappings', require('./put').cmd)
-    .command('delete', 'put mappings', require('./put').cmd)
+    .command('put', 'get alias', require('./put').cmd)
+    .command('del', 'put alias', require('./del').cmd)
+    .command('get', 'get alias', require('./get').cmd)
     .demand(3);
 }
 
 module.exports.cmd = cmd;
-module.exports.get = require('./get').op;
 module.exports.put = require('./put').op;
 module.exports.del = require('./del').op;
+module.exports.get = require('./get').op;

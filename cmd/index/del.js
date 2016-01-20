@@ -21,9 +21,9 @@ function cmd(yargs) {
     indexName = splitPath[0],
     options = _.pickBy({index: indexName}, _.identity);
 
-  log('info', 'creating', options);
+  log('info', 'deleting', options);
 
-  instance.indices.create(options).then(function (result) {
+  instance.indices.delete(options).then(function (result) {
     log('info', result);
   }).catch(function (error) {
     log('error', error);

@@ -7,6 +7,28 @@ const _ = require('lodash'),
   log = require('../../../lib/log').withStandardPrefix(__dirname),
   urlParse = require('url');
 
+function op(instance, mapping, indexName, typeName) {
+  var options;
+
+  if (_.isString(mapping)) {
+    mapping = JSON.parse(mapping);
+  }
+
+  if (mapping[indexName]) {
+    mapping = mapping[indexName].mappings;
+  }
+
+  if (mapping[typeName]) {
+    mapping = mapping[typeName];
+  }
+
+  options = _.pickBy({index: indexName, type: typeName, body: mapping}, _.identity);
+
+  log('info', 'putting mapping', options);
+
+  return instance.indices.putMapping(options);
+}
+
 function cmd(yargs) {
   var body;
 
@@ -32,23 +54,12 @@ function cmd(yargs) {
     options = _.pickBy({index: indexName, type: typeName}, _.identity),
     fileInput = fs.readFileSync(argv.from);
 
-  body = JSON.parse(fileInput);
-
-  if (body[indexName]) {
-    body = body[indexName].mappings;
-  }
-
-  if (body[typeName]) {
-    body = body[typeName];
-  }
-
-  log('info', 'putting', options, body);
-
-  instance.indices.putMapping(_.pickBy({index: indexName, type: typeName, body: body}, _.identity)).then(function (result) {
+  op(instance, fileInput, indexName, typeName).then(function (result) {
     log('info', result);
   }).catch(function (error) {
     log('error', error);
   });
 }
 
-module.exports = cmd;
+module.exports.cmd = cmd;
+module.exports.op = op;

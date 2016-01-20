@@ -7,6 +7,31 @@ const _ = require('lodash'),
   log = require('../../../lib/log').withStandardPrefix(__dirname),
   urlParse = require('url');
 
+/**
+ * @param {elasticsearch.Client} instance
+ * @param {string} indexName
+ * @param {string} [typeName]
+ * @returns {Promise}
+ */
+function op(instance, indexName, typeName) {
+  const options = _.pickBy({index: indexName, type: typeName}, _.identity);
+
+  log('info', 'getting mapping', options);
+
+  return instance.indices.getMapping(options).then(function (result) {
+
+    if (result[indexName]) {
+      result = result[indexName].mappings;
+    }
+
+    if (result[typeName]) {
+      result = result[typeName];
+    }
+
+    return result;
+  })
+}
+
 function cmd(yargs) {
   yargs
     .option('output', {
@@ -26,21 +51,9 @@ function cmd(yargs) {
     insetPath = target.path.substr(1),
     splitPath = insetPath.split('/'),
     indexName = splitPath[0],
-    typeName = splitPath[1],
-    options = _.pickBy({index: indexName, type: typeName}, _.identity);
+    typeName = splitPath[1];
 
-  log('info', 'getting', options);
-
-  instance.indices.getMapping(_.pickBy({index: indexName, type: typeName}, _.identity)).then(function (result) {
-
-    if (result[indexName]) {
-      result = result[indexName].mappings;
-    }
-
-    if (result[typeName]) {
-      result = result[typeName];
-    }
-
+  op(instance, indexName, typeName).then(function () {
     if (argv.output) {
       log('info', 'writing to', argv.output);
       fs.writeFileSync(argv.output, JSON.stringify(result), {encoding: 'utf8'});
@@ -52,4 +65,5 @@ function cmd(yargs) {
   });
 }
 
-module.exports = cmd;
+module.exports.cmd = cmd;
+module.exports.op = op;
