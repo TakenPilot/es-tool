@@ -17,5 +17,5 @@ module.exports.create = require('./create').op;
 module.exports.copy = require('./copy').op;
 module.exports.del = require('./del').op;
 module.exports.replaceWithAlias = require('./replace-with-alias').op;
-module.exports.alias = require('./alias');
-module.exports.mapping = require('./mapping');
+module.exports.alias = require('./alias').op;
+module.exports.mapping = require('./mapping').op;

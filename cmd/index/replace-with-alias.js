@@ -6,19 +6,26 @@ const stream = require('stream'),
   indices = require('./'),
   mapping = require('./mapping'),
   alias = require('./alias'),
-  log = require('../../lib/log');
+  log = require('../../lib/log').withStandardPrefix(__dirname);
 
 function op(instance, indexName, newIndexName) {
+  log('info', 'replacing', indexName, 'with alias pointing to', newIndexName);
+
   return mapping.get(instance, indexName).then(function (currentMapping) {
-    return indices.create(instance, newIndexName).then(function () {
-      return mapping.put(instance, newIndexName, currentMapping);
+    return indices.create(instance, newIndexName).catch({status: 400}, function (error) {
+      log('warn', 'Index', newIndexName, 'already exists');
+    }).then(function () {
+      return mapping.put(instance, currentMapping, newIndexName);
     });
   }).then(function () {
     return indices.copy(instance, indexName, instance, newIndexName);
   }).then(function () {
     return indices.del(instance, indexName);
   }).then(function () {
-    return alias.put(instance, indexName, newIndexName);
+    return alias.put(instance, indexName, newIndexName)
+      .catch(function (error) {
+        log('errorAliasPut', error);
+      });
   })
 }
 

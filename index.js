@@ -9,7 +9,7 @@ yargs.usage('Usage: $0 [command]')
     describe: 'version of api to use',
     type: 'string'
   })
-  .command('index', 'Set of commands to affect indices', require('./cmd/index'))
+  .command('index', 'Set of commands to affect indices', require('./cmd/index').cmd)
   .help('h')
   .version(function () {
     return require('./package.json').version;

@@ -1,8 +1,10 @@
 'use strict';
 
-const stream = require('stream'),
+const bluebird = require('bluebird'),
+  stream = require('stream'),
   common = require('../../lib/common'),
-  urlParse = require('url');
+  urlParse = require('url'),
+  log = require('../../lib/log').withStandardPrefix(__dirname);
 
 /**
  *
@@ -12,19 +14,25 @@ const stream = require('stream'),
  * @param {string} toIndexName
  */
 function op(fromInstance, fromIndexName, toInstance, toIndexName) {
+  return new bluebird.Promise(function (resolve, reject) {
+    const bulkStream = common.createBulkStream(toInstance, 100),
+      changeIndexStream = common.createTransformStream(function (obj, encoding, next) {
 
-  const bulkStream = common.createBulkStream(toInstance, 100),
-    changeIndexStream = common.createTransformStream(function (obj, encoding, next) {
+        obj._index = toIndexName;
+        this.push(obj);
 
-      obj._index = toIndexName;
-      this.push(obj);
+        next();
+      });
 
-      next();
-    });
+    log('info', 'copying from', fromIndexName, 'to', toIndexName);
 
-  common.streamIndex(fromInstance, fromIndexName, 100)
-    .pipe(changeIndexStream)
-    .pipe(bulkStream)
+    common.streamIndex(fromInstance, fromIndexName, 100)
+      .pipe(changeIndexStream)
+      .pipe(bulkStream)
+      .on('finish', function () {
+        resolve();
+      });
+  });
 }
 
 /**

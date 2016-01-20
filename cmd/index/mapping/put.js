@@ -22,6 +22,11 @@ function op(instance, mapping, indexName, typeName) {
     mapping = mapping[typeName];
   }
 
+  if (indexName && !typeName && _.size(mapping) === 1) {
+    typeName = Object.keys(mapping)[0];
+    mapping = mapping[typeName];
+  }
+
   options = _.pickBy({index: indexName, type: typeName, body: mapping}, _.identity);
 
   log('info', 'putting mapping', options);
@@ -30,8 +35,6 @@ function op(instance, mapping, indexName, typeName) {
 }
 
 function cmd(yargs) {
-  var body;
-
   yargs
     .option('from', {
       alias: 'f',
@@ -51,7 +54,6 @@ function cmd(yargs) {
     splitPath = insetPath.split('/'),
     indexName = splitPath[0],
     typeName = splitPath[1],
-    options = _.pickBy({index: indexName, type: typeName}, _.identity),
     fileInput = fs.readFileSync(argv.from);
 
   op(instance, fileInput, indexName, typeName).then(function (result) {

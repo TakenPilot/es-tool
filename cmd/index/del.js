@@ -7,6 +7,14 @@ const _ = require('lodash'),
   log = require('../../lib/log').withStandardPrefix(__dirname),
   urlParse = require('url');
 
+function op(instance, indexName) {
+  const options = _.pickBy({index: indexName}, _.identity);
+
+  log('info', 'deleting index', options);
+
+  return instance.indices.delete(options);
+}
+
 function cmd(yargs) {
   yargs
     .demand(3);
@@ -18,12 +26,9 @@ function cmd(yargs) {
     }),
     insetPath = target.path.substr(1),
     splitPath = insetPath.split('/'),
-    indexName = splitPath[0],
-    options = _.pickBy({index: indexName}, _.identity);
+    indexName = splitPath[0];
 
-  log('info', 'deleting', options);
-
-  instance.indices.delete(options).then(function (result) {
+  op(instance, indexName).then(function (result) {
     log('info', result);
   }).catch(function (error) {
     log('error', error);
@@ -31,3 +36,4 @@ function cmd(yargs) {
 }
 
 module.exports.cmd = cmd;
+module.exports.op = op;
