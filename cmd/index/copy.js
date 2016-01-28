@@ -15,7 +15,7 @@ const bluebird = require('bluebird'),
  */
 function op(fromInstance, fromIndexName, toInstance, toIndexName) {
   return new bluebird.Promise(function (resolve, reject) {
-    const bulkStream = common.createBulkStream(toInstance, 100),
+    const bulkStream = common.createBulkStream(toInstance, 5),
       changeIndexStream = common.createTransformStream(function (obj, encoding, next) {
 
         obj._index = toIndexName;
